@@ -33,7 +33,7 @@ export default function Sidebar({ conversations, activeId, onSelect, onDelete, o
   }, [])
 
   return (
-    <aside className="w-64 shrink-0 flex flex-col h-full bg-[#1a1a1a] border-r border-[#333]">
+    <aside className="w-64 shrink-0 flex flex-col h-full bg-[#1a1a1a]">
       <ApiKeyInput onSave={onApiKeyChange} />
       <div className="p-3 border-b border-[#333]">
         <button
