@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import type { Conversation } from '../types'
+import ApiKeyInput from './ApiKeyInput'
 
 interface Props {
   conversations: Conversation[]
@@ -9,9 +10,10 @@ interface Props {
   onSelect: (id: string) => void
   onDelete: (id: string) => void
   onNew: () => void
+  onApiKeyChange: (key: string) => void
 }
 
-export default function Sidebar({ conversations, activeId, onSelect, onDelete, onNew }: Props) {
+export default function Sidebar({ conversations, activeId, onSelect, onDelete, onNew, onApiKeyChange }: Props) {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; id: string } | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -32,6 +34,7 @@ export default function Sidebar({ conversations, activeId, onSelect, onDelete, o
 
   return (
     <aside className="w-64 shrink-0 flex flex-col h-full bg-[#1a1a1a] border-r border-[#333]">
+      <ApiKeyInput onSave={onApiKeyChange} />
       <div className="p-3 border-b border-[#333]">
         <button
           onClick={onNew}

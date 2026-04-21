@@ -4,11 +4,10 @@ import { join } from 'path'
 import type { NextRequest } from 'next/server'
 
 export async function POST(request: NextRequest) {
-  const { prompt, gridSize, referenceImages } = await request.json()
+  const { prompt, gridSize, referenceImages, apiKey } = await request.json()
 
-  const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
-    return Response.json({ error: 'GEMINI_API_KEY not set' }, { status: 500 })
+    return Response.json({ error: 'API 키를 입력해주세요.' }, { status: 400 })
   }
 
   const gridImagePath = join(process.cwd(), 'public', 'grids', `${gridSize}.png`)

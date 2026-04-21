@@ -88,7 +88,11 @@ export default function MessageList({ messages, onContinueGeneration }: Props) {
             </div>
           ) : (
             <div className="max-w-2xl space-y-3">
-              {msg.generatedImages && msg.generatedImages.length > 0 ? (
+              {msg.errorMessage ? (
+                <div className="text-red-400 text-sm bg-red-900/20 border border-red-900/40 rounded-lg px-4 py-3">
+                  {msg.errorMessage}
+                </div>
+              ) : msg.generatedImages && msg.generatedImages.length > 0 ? (
                 <div className="flex flex-wrap gap-3">
                   {msg.generatedImages.map((src, i) => (
                     <GeneratedImage

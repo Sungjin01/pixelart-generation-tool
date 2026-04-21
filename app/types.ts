@@ -12,6 +12,7 @@ export interface Message {
   text?: string
   referenceImages?: ReferenceImage[]
   generatedImages?: string[]
+  errorMessage?: string
   gridSize?: GridSize
   timestamp: number
 }

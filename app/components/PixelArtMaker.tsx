@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import Sidebar from './Sidebar'
 import MessageList from './MessageList'
 import InputArea from './InputArea'
 import { useConversations } from '../hooks/useConversations'
+import { getApiKey } from './ApiKeyInput'
 import type { GridSize, Message, ReferenceImage } from '../types'
 
 export default function PixelArtMaker() {
@@ -20,6 +21,15 @@ export default function PixelArtMaker() {
 
   const [loading, setLoading] = useState(false)
   const [continueImages, setContinueImages] = useState<ReferenceImage[]>([])
+  const apiKeyRef = useRef<string>('')
+
+  useEffect(() => {
+    apiKeyRef.current = getApiKey()
+  }, [])
+
+  const handleApiKeyChange = useCallback((key: string) => {
+    apiKeyRef.current = key
+  }, [])
 
   const handleSend = useCallback(
     async (text: string, images: ReferenceImage[], gridSize: GridSize) => {
@@ -51,6 +61,7 @@ export default function PixelArtMaker() {
             prompt: text,
             gridSize,
             referenceImages: images,
+            apiKey: apiKeyRef.current,
           }),
         })
         const data = await res.json()
@@ -58,6 +69,7 @@ export default function PixelArtMaker() {
           id: crypto.randomUUID(),
           role: 'assistant',
           generatedImages: data.images ?? [],
+          errorMessage: data.error,
           timestamp: Date.now(),
         }
         addMessage(conversationId, assistantMessage)
@@ -66,6 +78,7 @@ export default function PixelArtMaker() {
           id: crypto.randomUUID(),
           role: 'assistant',
           generatedImages: [],
+          errorMessage: '요청 중 오류가 발생했습니다.',
           timestamp: Date.now(),
         }
         addMessage(conversationId, errorMessage)
@@ -98,6 +111,7 @@ export default function PixelArtMaker() {
         onSelect={(id) => { setActiveId(id); setContinueImages([]) }}
         onDelete={deleteConversation}
         onNew={handleNew}
+        onApiKeyChange={handleApiKeyChange}
       />
       <div className="flex flex-col flex-1 min-w-0">
         <header className="shrink-0 px-6 py-4 border-b border-[#333] flex items-center">
