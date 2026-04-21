@@ -8,6 +8,8 @@ import { useConversations } from '../hooks/useConversations'
 import { getApiKey } from './ApiKeyInput'
 import type { GridSize, Message, ReferenceImage } from '../types'
 
+type Theme = 'dark' | 'light'
+
 export default function PixelArtMaker() {
   const {
     conversations,
@@ -21,10 +23,21 @@ export default function PixelArtMaker() {
 
   const [loading, setLoading] = useState(false)
   const [continueImages, setContinueImages] = useState<ReferenceImage[]>([])
+  const [theme, setTheme] = useState<Theme>('dark')
   const apiKeyRef = useRef<string>('')
 
   useEffect(() => {
     apiKeyRef.current = getApiKey()
+    const saved = (localStorage.getItem('theme') ?? 'dark') as Theme
+    setTheme(saved)
+  }, [])
+
+  const toggleTheme = useCallback(() => {
+    setTheme((t) => {
+      const next: Theme = t === 'dark' ? 'light' : 'dark'
+      localStorage.setItem('theme', next)
+      return next
+    })
   }, [])
 
   const handleApiKeyChange = useCallback((key: string) => {
@@ -105,7 +118,11 @@ export default function PixelArtMaker() {
   }, [setActiveId])
 
   return (
-    <div className="flex h-screen bg-[#141414] text-white overflow-hidden">
+    <div
+      data-theme={theme}
+      className="flex h-screen overflow-hidden"
+      style={{ background: 'var(--bg-base)', color: 'var(--text-primary)' }}
+    >
       <Sidebar
         conversations={conversations}
         activeId={activeId}
@@ -115,8 +132,19 @@ export default function PixelArtMaker() {
         onApiKeyChange={handleApiKeyChange}
       />
       <div className="flex flex-col flex-1 min-w-0">
-        <header className="shrink-0 px-6 py-4 border-b border-[#333] flex items-center">
+        <header
+          className="shrink-0 px-6 py-4 flex items-center justify-between"
+          style={{ borderBottom: '1px solid var(--border)' }}
+        >
           <h1 className="text-lg font-semibold tracking-tight">PixelArt Maker</h1>
+          <button
+            onClick={toggleTheme}
+            className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors text-base"
+            style={{ color: 'var(--text-secondary)' }}
+            title={theme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
         </header>
         <div className="flex flex-col flex-1 overflow-hidden">
           {activeConversation ? (
@@ -125,7 +153,7 @@ export default function PixelArtMaker() {
               onContinueGeneration={handleContinueGeneration}
             />
           ) : (
-            <div className="flex-1 flex items-center justify-center text-[#555] text-sm">
+            <div className="flex-1 flex items-center justify-center text-sm" style={{ color: 'var(--text-muted)' }}>
               새 대화를 시작하거나 사이드바에서 대화를 선택하세요.
             </div>
           )}

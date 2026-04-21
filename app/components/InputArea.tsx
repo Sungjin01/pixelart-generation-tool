@@ -15,14 +15,21 @@ function loadModel(): string {
   try { return localStorage.getItem(MODEL_STORAGE) ?? DEFAULT_MODEL } catch { return DEFAULT_MODEL }
 }
 
-export function getModel(): string {
-  return loadModel()
-}
-
 interface Props {
   onSend: (text: string, images: ReferenceImage[], gridSize: GridSize, model: string) => void
   loading: boolean
   initialImages?: ReferenceImage[]
+}
+
+const selectStyle: React.CSSProperties = {
+  background: 'var(--bg-element)',
+  border: '1px solid var(--border-subtle)',
+  color: 'var(--text-secondary)',
+  borderRadius: '0.5rem',
+  padding: '0.25rem 0.5rem',
+  fontSize: '0.875rem',
+  outline: 'none',
+  cursor: 'pointer',
 }
 
 export default function InputArea({ onSend, loading, initialImages }: Props) {
@@ -93,9 +100,12 @@ export default function InputArea({ onSend, loading, initialImages }: Props) {
   }, [submit])
 
   return (
-    <div className="border-t border-[#333] p-4">
+    <div className="p-4" style={{ borderTop: '1px solid var(--border)' }}>
       <div className="max-w-3xl mx-auto">
-        <div className="bg-[#1e1e1e] border border-[#444] rounded-2xl overflow-hidden">
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{ background: 'var(--bg-input)', border: '1px solid var(--border-subtle)' }}
+        >
           {images.length > 0 && (
             <div className="flex flex-wrap gap-2 p-3 pb-0">
               {images.map((img) => (
@@ -103,7 +113,8 @@ export default function InputArea({ onSend, loading, initialImages }: Props) {
                   <img
                     src={img.dataUrl}
                     alt="reference"
-                    className="w-14 h-14 object-cover rounded border border-[#555]"
+                    className="w-14 h-14 object-cover rounded"
+                    style={{ border: '1px solid var(--border-subtle)' }}
                   />
                   <button
                     onClick={() => removeImage(img.id)}
@@ -123,24 +134,21 @@ export default function InputArea({ onSend, loading, initialImages }: Props) {
             onPaste={handlePaste}
             placeholder="픽셀아트 설명을 입력하세요... (Enter로 전송, Shift+Enter로 줄바꿈)"
             rows={3}
-            className="w-full bg-transparent text-white text-sm px-4 pt-3 pb-2 resize-none outline-none placeholder-[#666]"
+            className="w-full text-sm px-4 pt-3 pb-2 resize-none outline-none"
+            style={{
+              background: 'transparent',
+              color: 'var(--text-primary)',
+              caretColor: 'var(--text-primary)',
+            }}
           />
           <div className="flex items-center justify-between px-3 pb-3">
             <div className="flex items-center gap-2">
-              <select
-                value={gridSize}
-                onChange={(e) => setGridSize(e.target.value as GridSize)}
-                className="bg-[#2a2a2a] text-[#aaa] text-sm rounded-lg px-2 py-1 border border-[#444] outline-none cursor-pointer hover:border-[#666]"
-              >
+              <select value={gridSize} onChange={(e) => setGridSize(e.target.value as GridSize)} style={selectStyle}>
                 <option value="16">16×16</option>
                 <option value="32">32×32</option>
                 <option value="64">64×64</option>
               </select>
-              <select
-                value={model}
-                onChange={(e) => handleModelChange(e.target.value)}
-                className="bg-[#2a2a2a] text-[#aaa] text-sm rounded-lg px-2 py-1 border border-[#444] outline-none cursor-pointer hover:border-[#666]"
-              >
+              <select value={model} onChange={(e) => handleModelChange(e.target.value)} style={selectStyle}>
                 {MODELS.map((m) => (
                   <option key={m.value} value={m.value}>{m.label}</option>
                 ))}
@@ -149,7 +157,8 @@ export default function InputArea({ onSend, loading, initialImages }: Props) {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-[#aaa] hover:bg-[#333] hover:text-white transition-colors text-lg"
+                className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors text-lg"
+                style={{ color: 'var(--text-secondary)' }}
                 title="레퍼런스 이미지 추가"
               >
                 🖼
@@ -157,7 +166,8 @@ export default function InputArea({ onSend, loading, initialImages }: Props) {
               <button
                 onClick={submit}
                 disabled={loading || (!text.trim() && images.length === 0)}
-                className="px-4 py-1.5 bg-white text-black text-sm font-medium rounded-lg disabled:opacity-40 hover:bg-gray-200 transition-colors"
+                className="px-4 py-1.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-40"
+                style={{ background: 'var(--text-primary)', color: 'var(--bg-base)' }}
               >
                 {loading ? '생성 중...' : '전송'}
               </button>

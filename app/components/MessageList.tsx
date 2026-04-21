@@ -27,24 +27,28 @@ function GeneratedImage({ src, onContinue }: { src: string; onContinue: () => vo
       <img
         src={src}
         alt="Generated pixel art"
-        className="max-w-xs rounded-lg border border-[#444] bg-[#111]"
-        style={{ imageRendering: 'pixelated' }}
+        className="max-w-xs rounded-lg"
+        style={{ imageRendering: 'pixelated', border: '1px solid var(--border-subtle)', background: 'var(--bg-element)' }}
       />
       <div className="absolute top-1 right-1" ref={menuRef}>
         <button
           onClick={() => setMenuOpen((o) => !o)}
-          className="w-7 h-7 flex items-center justify-center rounded bg-black/60 hover:bg-black/80 text-white text-sm"
+          className="w-7 h-7 flex items-center justify-center rounded text-sm"
+          style={{ background: 'rgba(0,0,0,0.5)', color: '#fff' }}
         >
           ⋮
         </button>
         {menuOpen && (
-          <div className="absolute right-0 mt-1 bg-[#2a2a2a] border border-[#444] rounded-lg shadow-xl overflow-hidden z-20 whitespace-nowrap">
+          <div
+            className="absolute right-0 mt-1 rounded-lg shadow-xl overflow-hidden z-20 whitespace-nowrap"
+            style={{ background: 'var(--bg-element)', border: '1px solid var(--border-subtle)' }}
+          >
             <button
-              onClick={() => {
-                onContinue()
-                setMenuOpen(false)
-              }}
-              className="block w-full px-4 py-2 text-sm text-white hover:bg-[#333] text-left"
+              onClick={() => { onContinue(); setMenuOpen(false) }}
+              className="block w-full px-4 py-2 text-sm text-left"
+              style={{ color: 'var(--text-primary)' }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-hover)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
             >
               이어서 생성하기
             </button>
@@ -75,13 +79,17 @@ export default function MessageList({ messages, onContinueGeneration }: Props) {
                       key={img.id}
                       src={img.dataUrl}
                       alt="reference"
-                      className="w-16 h-16 object-cover rounded border border-[#555]"
+                      className="w-16 h-16 object-cover rounded"
+                      style={{ border: '1px solid var(--border-subtle)' }}
                     />
                   ))}
                 </div>
               )}
               {msg.text && (
-                <div className="bg-[#2a2a2a] text-white rounded-2xl rounded-tr-sm px-4 py-3 text-sm whitespace-pre-wrap">
+                <div
+                  className="rounded-2xl rounded-tr-sm px-4 py-3 text-sm whitespace-pre-wrap"
+                  style={{ background: 'var(--bubble-user)', color: 'var(--text-primary)' }}
+                >
                   {msg.text}
                 </div>
               )}
@@ -89,7 +97,14 @@ export default function MessageList({ messages, onContinueGeneration }: Props) {
           ) : (
             <div className="max-w-2xl space-y-3">
               {msg.errorMessage ? (
-                <div className="text-red-400 text-sm bg-red-900/20 border border-red-900/40 rounded-lg px-4 py-3">
+                <div
+                  className="text-sm rounded-lg px-4 py-3"
+                  style={{
+                    background: 'var(--bubble-error-bg)',
+                    border: '1px solid var(--bubble-error-border)',
+                    color: 'var(--bubble-error-text)',
+                  }}
+                >
                   {msg.errorMessage}
                 </div>
               ) : msg.generatedImages && msg.generatedImages.length > 0 ? (
@@ -103,7 +118,9 @@ export default function MessageList({ messages, onContinueGeneration }: Props) {
                   ))}
                 </div>
               ) : (
-                <div className="text-[#aaa] text-sm italic">생성된 이미지가 없습니다.</div>
+                <div className="text-sm italic" style={{ color: 'var(--text-secondary)' }}>
+                  생성된 이미지가 없습니다.
+                </div>
               )}
             </div>
           )}

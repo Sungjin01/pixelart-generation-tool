@@ -33,12 +33,18 @@ export default function Sidebar({ conversations, activeId, onSelect, onDelete, o
   }, [])
 
   return (
-    <aside className="w-64 shrink-0 flex flex-col h-full bg-[#1a1a1a]">
+    <aside
+      className="w-64 shrink-0 flex flex-col h-full"
+      style={{ background: 'var(--bg-sidebar)' }}
+    >
       <ApiKeyInput onSave={onApiKeyChange} />
-      <div className="p-3 border-b border-[#333]">
+      <div className="p-3" style={{ borderBottom: '1px solid var(--border)' }}>
         <button
           onClick={onNew}
-          className="w-full px-3 py-2 text-sm rounded-lg bg-[#2a2a2a] hover:bg-[#333] text-white text-left transition-colors"
+          className="w-full px-3 py-2 text-sm rounded-lg text-left transition-colors"
+          style={{ background: 'var(--bg-element)', color: 'var(--text-primary)' }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-hover)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--bg-element)')}
         >
           + 새 대화
         </button>
@@ -49,11 +55,24 @@ export default function Sidebar({ conversations, activeId, onSelect, onDelete, o
             key={c.id}
             onClick={() => onSelect(c.id)}
             onContextMenu={(e) => handleContextMenu(e, c.id)}
-            className={`w-full text-left px-3 py-2 rounded-lg text-sm mb-1 truncate transition-colors ${
+            className="w-full text-left px-3 py-2 rounded-lg text-sm mb-1 truncate transition-colors"
+            style={
               c.id === activeId
-                ? 'bg-[#333] text-white'
-                : 'text-[#aaa] hover:bg-[#252525] hover:text-white'
-            }`}
+                ? { background: 'var(--bg-hover)', color: 'var(--text-primary)' }
+                : { background: 'transparent', color: 'var(--text-secondary)' }
+            }
+            onMouseEnter={(e) => {
+              if (c.id !== activeId) {
+                e.currentTarget.style.background = 'var(--bg-element)'
+                e.currentTarget.style.color = 'var(--text-primary)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (c.id !== activeId) {
+                e.currentTarget.style.background = 'transparent'
+                e.currentTarget.style.color = 'var(--text-secondary)'
+              }
+            }}
           >
             {c.title}
           </button>
@@ -63,15 +82,18 @@ export default function Sidebar({ conversations, activeId, onSelect, onDelete, o
       {contextMenu && (
         <div
           ref={menuRef}
-          style={{ top: contextMenu.y, left: contextMenu.x }}
-          className="fixed z-50 bg-[#2a2a2a] border border-[#444] rounded-lg shadow-xl overflow-hidden"
+          style={{ top: contextMenu.y, left: contextMenu.x, background: 'var(--bg-element)', border: '1px solid var(--border-subtle)' }}
+          className="fixed z-50 rounded-lg shadow-xl overflow-hidden"
         >
           <button
             onClick={() => {
               onDelete(contextMenu.id)
               setContextMenu(null)
             }}
-            className="block w-full px-4 py-2 text-sm text-red-400 hover:bg-[#333] text-left"
+            className="block w-full px-4 py-2 text-sm text-left text-red-500"
+            style={{ color: 'rgb(239 68 68)' }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-hover)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           >
             삭제
           </button>

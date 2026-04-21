@@ -28,8 +28,8 @@ export default function ApiKeyInput({ onSave }: Props) {
   }
 
   return (
-    <div className="p-3 border-b border-[#333]">
-      <p className="text-xs text-[#666] mb-1.5">Gemini API Key</p>
+    <div className="p-3" style={{ borderBottom: '1px solid var(--border)' }}>
+      <p className="text-xs mb-1.5" style={{ color: 'var(--text-muted)' }}>Gemini API Key</p>
       <div className="flex gap-1">
         <div className="relative flex-1">
           <input
@@ -38,11 +38,17 @@ export default function ApiKeyInput({ onSave }: Props) {
             onChange={(e) => { setKey(e.target.value); setSaved(false) }}
             onKeyDown={handleKeyDown}
             placeholder="AIza..."
-            className="w-full bg-[#2a2a2a] border border-[#444] rounded-lg px-2 py-1.5 text-xs text-white placeholder-[#555] outline-none focus:border-[#666] pr-7"
+            className="w-full rounded-lg px-2 py-1.5 text-xs outline-none pr-7"
+            style={{
+              background: 'var(--bg-element)',
+              border: '1px solid var(--border-subtle)',
+              color: 'var(--text-primary)',
+            }}
           />
           <button
             onClick={() => setVisible((v) => !v)}
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[#666] hover:text-[#aaa] text-xs"
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-xs"
+            style={{ color: 'var(--text-muted)' }}
             tabIndex={-1}
           >
             {visible ? '🙈' : '👁'}
@@ -51,7 +57,8 @@ export default function ApiKeyInput({ onSave }: Props) {
         <button
           onClick={handleSave}
           disabled={saved}
-          className="px-2.5 py-1.5 text-xs rounded-lg bg-[#333] text-white hover:bg-[#444] disabled:opacity-40 disabled:cursor-default transition-colors shrink-0"
+          className="px-2.5 py-1.5 text-xs rounded-lg transition-colors shrink-0 disabled:opacity-40 disabled:cursor-default"
+          style={{ background: 'var(--bg-hover)', color: 'var(--text-primary)' }}
         >
           저장
         </button>
