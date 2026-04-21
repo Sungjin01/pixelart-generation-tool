@@ -4,12 +4,12 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import type { GridSize, ReferenceImage } from '../types'
 
 const MODEL_STORAGE = 'gemini-model'
-const DEFAULT_MODEL = 'gemini-2.0-flash-preview-image-generation'
+const DEFAULT_MODEL = 'gemini-2.5-flash-preview-image-generation'
 const PRESET_MODELS = [
-  { value: 'gemini-2.0-flash-preview-image-generation', label: 'Gemini 2.0 Flash Preview' },
-  { value: 'gemini-2.0-flash-exp',                      label: 'Gemini 2.0 Flash Exp' },
-  { value: 'imagen-3.0-generate-002',                   label: 'Imagen 3' },
-  { value: 'imagen-4.0-generate-001',                   label: 'Imagen 4' },
+  { value: 'gemini-2.5-flash-preview-image-generation', label: 'Gemini 2.5 Flash Preview Image' },
+  { value: 'gemini-3.1-flash-image-preview',            label: 'Gemini 3.1 Flash Image' },
+  { value: 'gemini-3.0-pro-image-preview',              label: 'Gemini 3 Pro Image' },
+  { value: 'gemini-2.0-flash-preview-image-generation', label: 'Gemini 2.0 Flash Preview Image' },
 ]
 
 function loadModel(): string {

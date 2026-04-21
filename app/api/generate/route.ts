@@ -3,19 +3,12 @@ import { readFileSync } from 'fs'
 import { join } from 'path'
 import type { NextRequest } from 'next/server'
 
-const IMAGEN_MODELS = new Set([
-  'imagen-3.0-generate-002',
-  'imagen-4.0-generate-001',
-])
-
 function resolveStatus(err: unknown): number | undefined {
   if (err instanceof ApiError) return err.status
   if (err && typeof err === 'object') {
     const e = err as Record<string, unknown>
-    // APIError 계열 (RateLimitError 등) 및 기타 HTTP 에러
     if (typeof e.status === 'number') return e.status
     if (typeof e.statusCode === 'number') return e.statusCode
-    // 메시지에서 상태 코드 파싱 (마지막 수단)
     if (typeof e.message === 'string') {
       const m = e.message.match(/\b(400|401|403|404|429|500)\b/)
       if (m) return Number(m[1])
@@ -61,7 +54,7 @@ export async function POST(request: NextRequest) {
 
   if (!apiKey) return Response.json({ error: 'API 키를 입력해주세요.' }, { status: 400 })
 
-  const model = modelName || 'gemini-2.0-flash-preview-image-generation'
+  const model = modelName || 'gemini-2.5-flash-preview-image-generation'
 
   let gridImageBase64: string
   try {
@@ -73,28 +66,6 @@ export async function POST(request: NextRequest) {
 
   const ai = new GoogleGenAI({ apiKey })
 
-  // Imagen 모델 (generateImages API, 레퍼런스 이미지 미지원)
-  if (IMAGEN_MODELS.has(model)) {
-    const textPrompt = prompt
-      ? `${prompt}. 주어진 그리드에 맞는 ${gridSize}x${gridSize} 픽셀아트 스타일로, 정사각형 픽셀이 선명하게 보이도록 그려줘. 배경은 투명하게.`
-      : `${gridSize}x${gridSize} 픽셀아트. 정사각형 픽셀이 선명하게 보이도록, 배경은 투명하게.`
-
-    try {
-      const res = await ai.models.generateImages({
-        model,
-        prompt: textPrompt,
-        config: { numberOfImages: 1, aspectRatio: '1:1' },
-      })
-      const images = (res.generatedImages ?? [])
-        .filter((g) => g.image?.imageBytes)
-        .map((g) => `data:${g.image!.mimeType ?? 'image/png'};base64,${g.image!.imageBytes}`)
-      return Response.json({ images })
-    } catch (err) {
-      return errorResponse(err)
-    }
-  }
-
-  // Gemini 모델 (generateContent, 레퍼런스 이미지 지원)
   const imageParts: { inlineData: { data: string; mimeType: string } }[] = [
     { inlineData: { data: gridImageBase64, mimeType: 'image/png' } },
   ]
