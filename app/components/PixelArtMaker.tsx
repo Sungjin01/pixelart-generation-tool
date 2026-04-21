@@ -30,12 +30,14 @@ export default function PixelArtMaker() {
     apiKeyRef.current = getApiKey()
     const saved = (localStorage.getItem('theme') ?? 'dark') as Theme
     setTheme(saved)
+    document.documentElement.setAttribute('data-theme', saved)
   }, [])
 
   const toggleTheme = useCallback(() => {
     setTheme((t) => {
       const next: Theme = t === 'dark' ? 'light' : 'dark'
       localStorage.setItem('theme', next)
+      document.documentElement.setAttribute('data-theme', next)
       return next
     })
   }, [])
@@ -119,7 +121,6 @@ export default function PixelArtMaker() {
 
   return (
     <div
-      data-theme={theme}
       className="flex h-screen overflow-hidden"
       style={{ background: 'var(--bg-base)', color: 'var(--text-primary)' }}
     >
@@ -139,11 +140,10 @@ export default function PixelArtMaker() {
           <h1 className="text-lg font-semibold tracking-tight">PixelArt Maker</h1>
           <button
             onClick={toggleTheme}
-            className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors text-base"
-            style={{ color: 'var(--text-secondary)' }}
-            title={theme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
+            className="px-3 py-1 rounded-lg text-xs font-medium transition-colors"
+            style={{ background: 'var(--bg-element)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}
           >
-            {theme === 'dark' ? '☀️' : '🌙'}
+            {theme === 'dark' ? 'Light' : 'Dark'}
           </button>
         </header>
         <div className="flex flex-col flex-1 overflow-hidden">
