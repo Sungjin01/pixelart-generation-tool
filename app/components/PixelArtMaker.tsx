@@ -24,12 +24,15 @@ export default function PixelArtMaker() {
   const [loading, setLoading] = useState(false)
   const [continueImages, setContinueImages] = useState<ReferenceImage[]>([])
   const [theme, setTheme] = useState<Theme>('dark')
+  const [apiKey, setApiKey] = useState('')
   const apiKeyRef = useRef<string>('')
   const isInFlight = useRef(false)
   const activeIdRef = useRef<string | null>(null)
 
   useEffect(() => {
-    apiKeyRef.current = getApiKey()
+    const key = getApiKey()
+    apiKeyRef.current = key
+    setApiKey(key)
     const saved = (localStorage.getItem('theme') ?? 'dark') as Theme
     setTheme(saved)
     document.documentElement.setAttribute('data-theme', saved)
@@ -46,6 +49,7 @@ export default function PixelArtMaker() {
 
   const handleApiKeyChange = useCallback((key: string) => {
     apiKeyRef.current = key
+    setApiKey(key)
   }, [])
 
   // activeIdRef는 클로저 stale 없이 항상 최신 activeId를 읽기 위함
@@ -171,6 +175,7 @@ export default function PixelArtMaker() {
             onSend={handleSend}
             loading={loading}
             initialImages={continueImages}
+            apiKey={apiKey}
           />
         </div>
       </div>

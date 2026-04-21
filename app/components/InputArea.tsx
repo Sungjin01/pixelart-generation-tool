@@ -5,7 +5,7 @@ import type { GridSize, ReferenceImage } from '../types'
 
 const MODEL_STORAGE = 'gemini-model'
 const DEFAULT_MODEL = 'gemini-2.0-flash-preview-image-generation'
-const MODELS = [
+const PRESET_MODELS = [
   { value: 'gemini-2.0-flash-preview-image-generation', label: 'Gemini 2.0 Flash Preview' },
   { value: 'gemini-2.0-flash-exp',                      label: 'Gemini 2.0 Flash Exp' },
   { value: 'imagen-3.0-generate-002',                   label: 'Imagen 3' },
@@ -20,6 +20,7 @@ interface Props {
   onSend: (text: string, images: ReferenceImage[], gridSize: GridSize, model: string) => void
   loading: boolean
   initialImages?: ReferenceImage[]
+  apiKey: string
 }
 
 const selectStyle: React.CSSProperties = {
@@ -33,10 +34,12 @@ const selectStyle: React.CSSProperties = {
   cursor: 'pointer',
 }
 
-export default function InputArea({ onSend, loading, initialImages }: Props) {
+export default function InputArea({ onSend, loading, initialImages, apiKey }: Props) {
   const [text, setText] = useState('')
   const [gridSize, setGridSize] = useState<GridSize>('32')
   const [model, setModel] = useState(loadModel)
+  const [models, setModels] = useState(PRESET_MODELS)
+  const [fetchingModels, setFetchingModels] = useState(false)
   const [images, setImages] = useState<ReferenceImage[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -51,6 +54,32 @@ export default function InputArea({ onSend, loading, initialImages }: Props) {
   function handleModelChange(value: string) {
     setModel(value)
     try { localStorage.setItem(MODEL_STORAGE, value) } catch { /* ignore */ }
+  }
+
+  async function fetchModels() {
+    if (!apiKey || fetchingModels) return
+    setFetchingModels(true)
+    try {
+      const res = await fetch(`/api/models?apiKey=${encodeURIComponent(apiKey)}`)
+      const data = await res.json()
+      if (data.models?.length) {
+        const fetched = (data.models as { name: string; displayName: string }[]).map((m) => ({
+          value: m.name,
+          label: m.displayName || m.name,
+        }))
+        // 프리셋과 합쳐서 중복 제거
+        const merged = [
+          ...fetched,
+          ...PRESET_MODELS.filter((p) => !fetched.some((f) => f.value === p.value)),
+        ]
+        setModels(merged)
+        // 현재 선택 모델이 목록에 없으면 첫 번째로
+        if (!merged.some((m) => m.value === model)) {
+          handleModelChange(merged[0].value)
+        }
+      }
+    } catch { /* ignore */ }
+    finally { setFetchingModels(false) }
   }
 
   const addImageFromFile = useCallback((file: File) => {
@@ -94,7 +123,6 @@ export default function InputArea({ onSend, loading, initialImages }: Props) {
     onSend(text.trim(), images, gridSize, model)
     setText('')
     setImages([])
-    // loading prop이 true로 바뀌면 해제
     setTimeout(() => { submittingRef.current = false }, 300)
   }, [loading, text, images, gridSize, model, onSend])
 
@@ -154,11 +182,22 @@ export default function InputArea({ onSend, loading, initialImages }: Props) {
                 <option value="32">32×32</option>
                 <option value="64">64×64</option>
               </select>
-              <select value={model} onChange={(e) => handleModelChange(e.target.value)} style={selectStyle}>
-                {MODELS.map((m) => (
-                  <option key={m.value} value={m.value}>{m.label}</option>
-                ))}
-              </select>
+              <div className="flex items-center gap-1">
+                <select value={model} onChange={(e) => handleModelChange(e.target.value)} style={selectStyle}>
+                  {models.map((m) => (
+                    <option key={m.value} value={m.value}>{m.label}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={fetchModels}
+                  disabled={fetchingModels || !apiKey}
+                  title="내 API 키로 접근 가능한 모델 불러오기"
+                  className="w-7 h-7 flex items-center justify-center rounded text-sm transition-colors disabled:opacity-30"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  {fetchingModels ? '…' : '↻'}
+                </button>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <button
