@@ -10,7 +10,7 @@ interface Props {
   onSelect: (id: string) => void
   onDelete: (id: string) => void
   onNew: () => void
-  onApiKeyChange: (key: string, model: string) => void
+  onApiKeyChange: (key: string) => void
 }
 
 export default function Sidebar({ conversations, activeId, onSelect, onDelete, onNew, onApiKeyChange }: Props) {

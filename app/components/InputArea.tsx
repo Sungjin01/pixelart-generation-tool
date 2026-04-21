@@ -3,8 +3,24 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import type { GridSize, ReferenceImage } from '../types'
 
+const MODEL_STORAGE = 'gemini-model'
+const DEFAULT_MODEL = 'gemini-2.0-flash-preview-image-generation'
+const MODELS = [
+  { value: 'gemini-2.0-flash-preview-image-generation', label: 'Flash 2.0 Preview' },
+  { value: 'gemini-3.1-flash-image-preview', label: 'Flash 3.1 Preview' },
+  { value: 'gemini-2.0-flash-exp', label: 'Flash 2.0 Exp' },
+]
+
+function loadModel(): string {
+  try { return localStorage.getItem(MODEL_STORAGE) ?? DEFAULT_MODEL } catch { return DEFAULT_MODEL }
+}
+
+export function getModel(): string {
+  return loadModel()
+}
+
 interface Props {
-  onSend: (text: string, images: ReferenceImage[], gridSize: GridSize) => void
+  onSend: (text: string, images: ReferenceImage[], gridSize: GridSize, model: string) => void
   loading: boolean
   initialImages?: ReferenceImage[]
 }
@@ -12,6 +28,7 @@ interface Props {
 export default function InputArea({ onSend, loading, initialImages }: Props) {
   const [text, setText] = useState('')
   const [gridSize, setGridSize] = useState<GridSize>('32')
+  const [model, setModel] = useState(loadModel)
   const [images, setImages] = useState<ReferenceImage[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -22,6 +39,11 @@ export default function InputArea({ onSend, loading, initialImages }: Props) {
       textareaRef.current?.focus()
     }
   }, [initialImages])
+
+  function handleModelChange(value: string) {
+    setModel(value)
+    try { localStorage.setItem(MODEL_STORAGE, value) } catch { /* ignore */ }
+  }
 
   const addImageFromFile = useCallback((file: File) => {
     const reader = new FileReader()
@@ -35,53 +57,40 @@ export default function InputArea({ onSend, loading, initialImages }: Props) {
     reader.readAsDataURL(file)
   }, [])
 
-  const handlePaste = useCallback(
-    (e: React.ClipboardEvent) => {
-      const items = Array.from(e.clipboardData.items)
-      for (const item of items) {
-        if (item.type.startsWith('image/')) {
-          const file = item.getAsFile()
-          if (file) addImageFromFile(file)
-        }
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
+    const items = Array.from(e.clipboardData.items)
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile()
+        if (file) addImageFromFile(file)
       }
-    },
-    [addImageFromFile]
-  )
+    }
+  }, [addImageFromFile])
 
-  const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = Array.from(e.target.files ?? [])
-      files.forEach(addImageFromFile)
-      e.target.value = ''
-    },
-    [addImageFromFile]
-  )
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? [])
+    files.forEach(addImageFromFile)
+    e.target.value = ''
+  }, [addImageFromFile])
 
   const removeImage = useCallback((id: string) => {
     setImages((prev) => prev.filter((img) => img.id !== id))
   }, [])
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault()
-        if (!loading && (text.trim() || images.length > 0)) {
-          onSend(text.trim(), images, gridSize)
-          setText('')
-          setImages([])
-        }
-      }
-    },
-    [loading, text, images, gridSize, onSend]
-  )
-
-  const handleSubmit = useCallback(() => {
+  const submit = useCallback(() => {
     if (!loading && (text.trim() || images.length > 0)) {
-      onSend(text.trim(), images, gridSize)
+      onSend(text.trim(), images, gridSize, model)
       setText('')
       setImages([])
     }
-  }, [loading, text, images, gridSize, onSend])
+  }, [loading, text, images, gridSize, model, onSend])
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      submit()
+    }
+  }, [submit])
 
   return (
     <div className="border-t border-[#333] p-4">
@@ -117,15 +126,26 @@ export default function InputArea({ onSend, loading, initialImages }: Props) {
             className="w-full bg-transparent text-white text-sm px-4 pt-3 pb-2 resize-none outline-none placeholder-[#666]"
           />
           <div className="flex items-center justify-between px-3 pb-3">
-            <select
-              value={gridSize}
-              onChange={(e) => setGridSize(e.target.value as GridSize)}
-              className="bg-[#2a2a2a] text-[#aaa] text-sm rounded-lg px-2 py-1 border border-[#444] outline-none cursor-pointer hover:border-[#666]"
-            >
-              <option value="16">16×16</option>
-              <option value="32">32×32</option>
-              <option value="64">64×64</option>
-            </select>
+            <div className="flex items-center gap-2">
+              <select
+                value={gridSize}
+                onChange={(e) => setGridSize(e.target.value as GridSize)}
+                className="bg-[#2a2a2a] text-[#aaa] text-sm rounded-lg px-2 py-1 border border-[#444] outline-none cursor-pointer hover:border-[#666]"
+              >
+                <option value="16">16×16</option>
+                <option value="32">32×32</option>
+                <option value="64">64×64</option>
+              </select>
+              <select
+                value={model}
+                onChange={(e) => handleModelChange(e.target.value)}
+                className="bg-[#2a2a2a] text-[#aaa] text-sm rounded-lg px-2 py-1 border border-[#444] outline-none cursor-pointer hover:border-[#666]"
+              >
+                {MODELS.map((m) => (
+                  <option key={m.value} value={m.value}>{m.label}</option>
+                ))}
+              </select>
+            </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => fileInputRef.current?.click()}
@@ -135,7 +155,7 @@ export default function InputArea({ onSend, loading, initialImages }: Props) {
                 🖼
               </button>
               <button
-                onClick={handleSubmit}
+                onClick={submit}
                 disabled={loading || (!text.trim() && images.length === 0)}
                 className="px-4 py-1.5 bg-white text-black text-sm font-medium rounded-lg disabled:opacity-40 hover:bg-gray-200 transition-colors"
               >
