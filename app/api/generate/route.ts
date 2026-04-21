@@ -32,7 +32,27 @@ export async function POST(request: NextRequest) {
     ? `${prompt}\n\n주어진 레퍼런스 이미지의 화풍을 참고하여, 주어진 그리드 이미지에 정확히 맞도록 픽셀아트를 그려줘. 그리드의 각 칸이 하나의 픽셀이 되도록 그려야 해.`
     : '주어진 레퍼런스 이미지의 화풍을 참고하여, 주어진 그리드 이미지에 정확히 맞도록 픽셀아트를 그려줘. 그리드의 각 칸이 하나의 픽셀이 되도록 그려야 해.'
 
-  const result = await model.generateContent([...imageParts, textPrompt])
+  let result
+  try {
+    result = await model.generateContent([...imageParts, textPrompt])
+  } catch (err: unknown) {
+    const e = err as { status?: number; statusText?: string; errorDetails?: { retryDelay?: string }[] }
+    if (e?.status === 429) {
+      const retryDelay = e.errorDetails?.find((d) => d.retryDelay)?.retryDelay
+      const msg = retryDelay
+        ? `요청이 너무 많습니다. ${retryDelay} 후 다시 시도해주세요.`
+        : '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.'
+      return Response.json({ error: msg }, { status: 429 })
+    }
+    if (e?.status === 400) {
+      return Response.json({ error: 'API 키가 올바르지 않습니다.' }, { status: 400 })
+    }
+    if (e?.status === 403) {
+      return Response.json({ error: 'API 키 권한이 없습니다.' }, { status: 403 })
+    }
+    return Response.json({ error: '이미지 생성 중 오류가 발생했습니다.' }, { status: 500 })
+  }
+
   const response = result.response
 
   const generatedImages: string[] = []
