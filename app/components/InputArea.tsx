@@ -6,9 +6,10 @@ import type { GridSize, ReferenceImage } from '../types'
 const MODEL_STORAGE = 'gemini-model'
 const DEFAULT_MODEL = 'gemini-2.0-flash-preview-image-generation'
 const MODELS = [
-  { value: 'gemini-2.0-flash-preview-image-generation', label: 'Flash 2.0 Preview' },
-  { value: 'gemini-3.1-flash-image-preview', label: 'Flash 3.1 Preview' },
-  { value: 'gemini-2.0-flash-exp', label: 'Flash 2.0 Exp' },
+  { value: 'gemini-2.0-flash-preview-image-generation', label: 'Gemini 2.0 Flash Preview' },
+  { value: 'gemini-2.0-flash-exp',                      label: 'Gemini 2.0 Flash Exp' },
+  { value: 'imagen-3.0-generate-002',                   label: 'Imagen 3' },
+  { value: 'imagen-4.0-generate-001',                   label: 'Imagen 4' },
 ]
 
 function loadModel(): string {
