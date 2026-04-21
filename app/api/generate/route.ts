@@ -9,9 +9,13 @@ function resolveStatus(err: unknown): number | undefined {
     const e = err as Record<string, unknown>
     if (typeof e.status === 'number') return e.status
     if (typeof e.statusCode === 'number') return e.statusCode
+    // JSON 응답 바디가 message에 포함된 경우 파싱 (정규식은 오탐 위험)
     if (typeof e.message === 'string') {
-      const m = e.message.match(/\b(400|401|403|404|429|500)\b/)
-      if (m) return Number(m[1])
+      try {
+        const parsed = JSON.parse(e.message)
+        const code = parsed?.error?.code ?? parsed?.code
+        if (typeof code === 'number') return code
+      } catch { /* not JSON */ }
     }
   }
   return undefined
