@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
 
   if (!apiKey) return Response.json({ error: 'API 키를 입력해주세요.' }, { status: 400 })
 
-  const model = modelName || 'gemini-2.5-flash-preview-image-generation'
+  const model = modelName || 'gemini-3.1-flash-image-preview'
 
   let gridImageBase64: string
   try {

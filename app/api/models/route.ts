@@ -21,7 +21,9 @@ export async function GET(request: NextRequest) {
           name.includes('pro-image')
         )
       if (isImageModel) {
-        models.push({ name, displayName: model.displayName ?? name })
+        // SDK가 generateContent 호출 시 'models/' prefix를 자동 추가하므로 제거
+        const modelId = name.replace(/^models\//, '')
+        models.push({ name: modelId, displayName: model.displayName ?? modelId })
       }
     }
 

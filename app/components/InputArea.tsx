@@ -4,12 +4,10 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import type { GridSize, ReferenceImage } from '../types'
 
 const MODEL_STORAGE = 'gemini-model'
-const DEFAULT_MODEL = 'gemini-2.5-flash-preview-image-generation'
+const DEFAULT_MODEL = 'gemini-3.1-flash-image-preview'
+// API 키로 ↻ 조회 전 fallback용 (확인된 모델만)
 const PRESET_MODELS = [
-  { value: 'gemini-2.5-flash-preview-image-generation', label: 'Gemini 2.5 Flash Preview Image' },
-  { value: 'gemini-3.1-flash-image-preview',            label: 'Gemini 3.1 Flash Image' },
-  { value: 'gemini-3.0-pro-image-preview',              label: 'Gemini 3 Pro Image' },
-  { value: 'gemini-2.0-flash-preview-image-generation', label: 'Gemini 2.0 Flash Preview Image' },
+  { value: 'gemini-3.1-flash-image-preview', label: 'Gemini 3.1 Flash Image' },
 ]
 
 function loadModel(): string {
@@ -51,12 +49,19 @@ export default function InputArea({ onSend, loading, initialImages, apiKey }: Pr
     }
   }, [initialImages])
 
+  // API 키가 세팅되면 자동으로 실제 모델 목록 조회
+  useEffect(() => {
+    if (apiKey) fetchModels()
+    // fetchModels는 렌더마다 새로 생성되므로 apiKey만 dep으로
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiKey])
+
   function handleModelChange(value: string) {
     setModel(value)
     try { localStorage.setItem(MODEL_STORAGE, value) } catch { /* ignore */ }
   }
 
-  async function fetchModels() {
+  const fetchModels = useCallback(async () => {
     if (!apiKey || fetchingModels) return
     setFetchingModels(true)
     try {
@@ -67,20 +72,20 @@ export default function InputArea({ onSend, loading, initialImages, apiKey }: Pr
           value: m.name,
           label: m.displayName || m.name,
         }))
-        // 프리셋과 합쳐서 중복 제거
-        const merged = [
-          ...fetched,
-          ...PRESET_MODELS.filter((p) => !fetched.some((f) => f.value === p.value)),
-        ]
-        setModels(merged)
-        // 현재 선택 모델이 목록에 없으면 첫 번째로
-        if (!merged.some((m) => m.value === model)) {
-          handleModelChange(merged[0].value)
-        }
+        setModels(fetched)
+        setModel((current) => {
+          // 현재 선택 모델이 목록에 없으면 첫 번째로
+          if (!fetched.some((m) => m.value === current)) {
+            const first = fetched[0].value
+            try { localStorage.setItem(MODEL_STORAGE, first) } catch { /* ignore */ }
+            return first
+          }
+          return current
+        })
       }
     } catch { /* ignore */ }
     finally { setFetchingModels(false) }
-  }
+  }, [apiKey]) // fetchingModels는 dep에 넣으면 루프 발생하므로 제외
 
   const addImageFromFile = useCallback((file: File) => {
     const reader = new FileReader()
