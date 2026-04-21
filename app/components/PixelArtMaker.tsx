@@ -5,7 +5,7 @@ import Sidebar from './Sidebar'
 import MessageList from './MessageList'
 import InputArea from './InputArea'
 import { useConversations } from '../hooks/useConversations'
-import { getApiKey } from './ApiKeyInput'
+import { getApiKey, getModel } from './ApiKeyInput'
 import type { GridSize, Message, ReferenceImage } from '../types'
 
 export default function PixelArtMaker() {
@@ -22,13 +22,16 @@ export default function PixelArtMaker() {
   const [loading, setLoading] = useState(false)
   const [continueImages, setContinueImages] = useState<ReferenceImage[]>([])
   const apiKeyRef = useRef<string>('')
+  const modelRef = useRef<string>('')
 
   useEffect(() => {
     apiKeyRef.current = getApiKey()
+    modelRef.current = getModel()
   }, [])
 
-  const handleApiKeyChange = useCallback((key: string) => {
+  const handleApiKeyChange = useCallback((key: string, model: string) => {
     apiKeyRef.current = key
+    modelRef.current = model
   }, [])
 
   const handleSend = useCallback(
@@ -62,6 +65,7 @@ export default function PixelArtMaker() {
             gridSize,
             referenceImages: images,
             apiKey: apiKeyRef.current,
+            model: modelRef.current,
           }),
         })
         const data = await res.json()
