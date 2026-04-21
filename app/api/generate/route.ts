@@ -25,19 +25,25 @@ function errorResponse(err: unknown) {
   const status = resolveStatus(err)
   const message = err instanceof Error ? err.message : String(err)
 
+  // 디버깅: 서버 로그에 실제 에러 구조 출력
+  console.error('[generate] error status:', status)
+  console.error('[generate] error message:', message)
+  console.error('[generate] error keys:', err && typeof err === 'object' ? Object.keys(err) : typeof err)
+
   if (status === 429) {
     const details = (err as Record<string, unknown>)?.errorDetails as { retryDelay?: string }[] | undefined
     const delay = details?.find((d) => d.retryDelay)?.retryDelay
+    const hint = delay ? ` (${delay} 후 재시도)` : ''
     return Response.json(
-      { error: delay ? `요청이 너무 많습니다. ${delay} 후 다시 시도해주세요.` : '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.' },
+      { error: `요청 할당량 초과 (429)${hint}. API 키가 유효한지, 할당량이 남아있는지 확인해주세요.\n원문: ${message}` },
       { status: 429 },
     )
   }
-  if (status === 401) return Response.json({ error: 'API 키가 올바르지 않습니다.' }, { status: 401 })
-  if (status === 403) return Response.json({ error: `이 모델은 현재 플랜에서 사용할 수 없습니다. (${message})` }, { status: 403 })
-  if (status === 404) return Response.json({ error: `모델을 찾을 수 없습니다. 모델명을 확인해주세요. (${message})` }, { status: 404 })
-  if (status === 400) return Response.json({ error: `잘못된 요청입니다: ${message}` }, { status: 400 })
-  return Response.json({ error: `오류가 발생했습니다 [${status ?? '?'}]: ${message}` }, { status: 500 })
+  if (status === 401) return Response.json({ error: `API 키가 올바르지 않습니다. (401)\n원문: ${message}` }, { status: 401 })
+  if (status === 403) return Response.json({ error: `이 모델은 현재 플랜에서 사용할 수 없습니다. (403)\n원문: ${message}` }, { status: 403 })
+  if (status === 404) return Response.json({ error: `모델을 찾을 수 없습니다. (404)\n원문: ${message}` }, { status: 404 })
+  if (status === 400) return Response.json({ error: `잘못된 요청입니다. (400)\n원문: ${message}` }, { status: 400 })
+  return Response.json({ error: `오류가 발생했습니다 [${status ?? '?'}]:\n${message}` }, { status: 500 })
 }
 
 export async function POST(request: NextRequest) {
