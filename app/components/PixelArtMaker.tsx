@@ -25,6 +25,8 @@ export default function PixelArtMaker() {
   const [continueImages, setContinueImages] = useState<ReferenceImage[]>([])
   const [theme, setTheme] = useState<Theme>('dark')
   const apiKeyRef = useRef<string>('')
+  const isInFlight = useRef(false)
+  const activeIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     apiKeyRef.current = getApiKey()
@@ -46,8 +48,18 @@ export default function PixelArtMaker() {
     apiKeyRef.current = key
   }, [])
 
+  // activeIdRef는 클로저 stale 없이 항상 최신 activeId를 읽기 위함
+  useEffect(() => {
+    activeIdRef.current = activeId
+  }, [activeId])
+
   const handleSend = useCallback(
     async (text: string, images: ReferenceImage[], gridSize: GridSize, model: string) => {
+      // ref로 동기 체크 → state 업데이트 타이밍과 무관하게 중복 호출 차단
+      if (isInFlight.current) return
+      isInFlight.current = true
+      setLoading(true)
+
       const userMessage: Message = {
         id: crypto.randomUUID(),
         role: 'user',
@@ -57,7 +69,7 @@ export default function PixelArtMaker() {
         timestamp: Date.now(),
       }
 
-      let conversationId = activeId
+      let conversationId = activeIdRef.current
       if (!conversationId) {
         const conv = createConversation(userMessage)
         conversationId = conv.id
@@ -65,7 +77,6 @@ export default function PixelArtMaker() {
         addMessage(conversationId, userMessage)
       }
 
-      setLoading(true)
       setContinueImages([])
 
       try {
@@ -81,28 +92,27 @@ export default function PixelArtMaker() {
           }),
         })
         const data = await res.json()
-        const assistantMessage: Message = {
+        addMessage(conversationId, {
           id: crypto.randomUUID(),
           role: 'assistant',
           generatedImages: data.images ?? [],
           errorMessage: data.error,
           timestamp: Date.now(),
-        }
-        addMessage(conversationId, assistantMessage)
+        })
       } catch {
-        const errorMessage: Message = {
+        addMessage(conversationId, {
           id: crypto.randomUUID(),
           role: 'assistant',
           generatedImages: [],
           errorMessage: '요청 중 오류가 발생했습니다.',
           timestamp: Date.now(),
-        }
-        addMessage(conversationId, errorMessage)
+        })
       } finally {
+        isInFlight.current = false
         setLoading(false)
       }
     },
-    [activeId, createConversation, addMessage]
+    [createConversation, addMessage]
   )
 
   const handleContinueGeneration = useCallback((imageSrc: string) => {

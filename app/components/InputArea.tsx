@@ -84,12 +84,17 @@ export default function InputArea({ onSend, loading, initialImages }: Props) {
     setImages((prev) => prev.filter((img) => img.id !== id))
   }, [])
 
+  const submittingRef = useRef(false)
+
   const submit = useCallback(() => {
-    if (!loading && (text.trim() || images.length > 0)) {
-      onSend(text.trim(), images, gridSize, model)
-      setText('')
-      setImages([])
-    }
+    if (loading || submittingRef.current) return
+    if (!text.trim() && images.length === 0) return
+    submittingRef.current = true
+    onSend(text.trim(), images, gridSize, model)
+    setText('')
+    setImages([])
+    // loading prop이 true로 바뀌면 해제
+    setTimeout(() => { submittingRef.current = false }, 300)
   }, [loading, text, images, gridSize, model, onSend])
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
